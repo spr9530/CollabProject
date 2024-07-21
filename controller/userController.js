@@ -121,7 +121,7 @@ const updateUserInfo = async (req, res) => {
     const data = req.body;
     if (user) {
         try {
-            const userInfo = await UserInfo.findOneAndUpdate({ _id: user.userId }, { $set: { rooms: data.rooms } }, { new: true })
+            const userInfo = await UserInfo.findOneAndUpdate({ _id: user.userId }, { $set: { rooms: data.rooms } }, { new: true }).populate('rooms')
             res.json({ userInfo })
         } catch (error) {
             res.json({ error })
