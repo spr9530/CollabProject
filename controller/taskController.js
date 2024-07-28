@@ -27,8 +27,22 @@ const getRoomTask = async (req, res) => {
         if (!task) {
             return res.status(404).json({ error: 'Task not found' });
         }
-
         res.json({ task });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getAllTask = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const tasks = await TaskInfo.find({ users : id }).populate('taskRoom');
+
+        if (tasks.length === 0) {
+            return res.status(404).json({ error: 'Not Found' });
+        }
+
+        res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -93,4 +107,4 @@ const deleteTask = async (req, res) => {
 }
 
 
-module.exports = { createTask, getRoomTask, updateTask, getOneTask, deleteTask }
+module.exports = { createTask, getRoomTask, updateTask, getOneTask, deleteTask, getAllTask }

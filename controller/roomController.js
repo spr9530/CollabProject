@@ -49,6 +49,25 @@ const creatRoom = async (req, res) => {
     }
 }
 
+const deleteRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        console.log(roomId);
+
+        const response = await RoomInfo.findOneAndDelete({ _id: roomId });
+        if (!response) {
+            return res.status(404).json({ error: "Room not found" });
+        }
+
+        const updated = await RoomInfo.find();
+
+        res.json({ data: updated });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
 const getRoomData = async (req, res) => {
     const { roomId } = req.params;
 
@@ -77,7 +96,6 @@ const getRoomData = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-
 
 const addUserToRoom = async (req, res) => {
     const { id } = req.params;
@@ -251,7 +269,6 @@ const rejectRoomReqst = async (req, res) => {
     }
 };
 
-
 const updateEditorVersion = async (req, res) => {
     const { version, data } = req.body;
     const { id } = req.params;
@@ -340,5 +357,5 @@ const downloadRoomFiles = async (req, res) => {
 
 
 module.exports = { saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, createRoomFile, getRoomFiles, fetchRoomEditor, updateRoomReqst, updateEditorVersion, downloadRoomFiles,
-    acceptRoomReqst, rejectRoomReqst
+    acceptRoomReqst, rejectRoomReqst, deleteRoom,
  };
