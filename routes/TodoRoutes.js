@@ -7,7 +7,9 @@ const router = express.Router();
 router.post('/', createTodo);
 
 // Route to get all todos
-router.get('/', getTodo);
+router.get('/', (req, res)=>{
+  res.send('hello');
+});
 
 // Route to update a todo by ID
 router.put('/:id', updateTodo);
