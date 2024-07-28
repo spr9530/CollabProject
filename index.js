@@ -31,10 +31,8 @@ const peerServer = ExpressPeerServer(server, {
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(cors());
-app.get('/', (req,res)=>{
-    res.send('hello');
-})
 app.use('/app/v1/room', require('./routes/RoomRoutes'))
+app.use('/app/v1/todo', require('./routes/TodoRoutes'))
 app.use('/app/v1/task', require('./routes/TaskRoute'))
 app.use('/app/v1/user', require('./routes/UserRoutes'))
 app.use('/app/v1/room/meeting', peerServer);
