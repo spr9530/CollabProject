@@ -116,18 +116,39 @@ const getUserInfo = async (req, res) => {
 }
 
 const updateUserInfo = async (req, res) => {
-
     const user = req.user;
     const data = req.body;
-    if (user) {
-        try {
-            const userInfo = await UserInfo.findOneAndUpdate({ _id: user.userId }, { $set: { rooms: data.rooms } }, { new: true }).populate('rooms')
-            res.json({ userInfo })
-        } catch (error) {
-            res.json({ error })
-        }
+
+    if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
     }
-}
+
+    if (!data || !data.rooms) {
+        return res.status(400).json({ error: 'Bad Request: Missing rooms data' });
+    }
+
+    try {
+        const userInfo = await UserInfo.findOneAndUpdate(
+            { _id: user.userId },
+            { $set: { rooms: data.rooms } },
+            { new: true }
+        );
+
+        if (!userInfo) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const update = await UserInfo.find({_id: user.userId}).populate('rooms');
+        await UserInfo.populate(update, {
+            path: 'rooms.users.userId'
+        });
+        res.status(200).json(update);
+    } catch (error) {
+        console.error('Error updating user info:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
