@@ -1,7 +1,8 @@
 const express = require('express');
 const { saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, createRoomFile, getRoomFiles, fetchRoomEditor, updateRoomReqst, updateEditorVersion, downloadRoomFiles,
     acceptRoomReqst, rejectRoomReqst,
-    deleteRoom
+    deleteRoom,
+    createRoomCode
  } = require('../controller/roomController');
 const router = express.Router();
 const validateUserInfo = require('../middelware/validateUser');
@@ -15,11 +16,13 @@ router.get('/', (req, res) => {
 router.post('/saveData', saveRoomData); 
 // This route handles saving data to a room
 
+router.get('/createRoomCode', createRoomCode)
+
 // Route to create a new room
 router.post('/createRoom', validateUserInfo, creatRoom); 
 // This route validates user information before creating a new room
 
-router.delete('/:roomId', deleteRoom)
+router.delete('/:roomId/:roomCode', deleteRoom)
 
 // Route to upload files to a specific room
 router.post('/:roomId/files', validateUserInfo, roomAuthentication, createRoomFile); 

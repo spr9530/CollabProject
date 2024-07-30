@@ -4,6 +4,7 @@ const UserInfo = require('../models/UserSchema')
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
+const RoomCodeInfo = require('../models/RoomCodeSchema');
 
 const saveRoomData = async (req, res) => {
     const data = req.body;
@@ -19,6 +20,37 @@ const saveRoomData = async (req, res) => {
         }
     } else {
         res.status(400).json({ message: "No data provided" });
+    }
+};
+const generateRoomCodeSegment = () => Math.floor(Math.random() * 900 + 100);
+const generateRoomCode = () => {
+    const segment1 = generateRoomCodeSegment();
+    const segment2 = generateRoomCodeSegment();
+    const segment3 = generateRoomCodeSegment();
+    const segment4 = generateRoomCodeSegment();
+    return `${segment1}-${segment2}-${segment3}-${segment4}`;
+};
+
+const createRoomCode = async (req, res) => {
+    try {
+        let unique = false;
+        let roomCode;
+        
+        while (!unique) {
+            roomCode = generateRoomCode();
+            const existingCode = await RoomCodeInfo.findOne({ roomCode });
+            if (!existingCode) {
+                unique = true;
+            }
+        }
+        
+        const newRoomCode = new RoomCodeInfo({ code:roomCode });
+        await newRoomCode.save();
+
+        res.status(201).json({ roomCode });
+    } catch (error) {
+        console.error('Error creating room code:', error);
+        res.status(500).json({ error: 'An error occurred while creating the room code' });
     }
 };
 
@@ -51,14 +83,14 @@ const creatRoom = async (req, res) => {
 
 const deleteRoom = async (req, res) => {
     try {
-        const { roomId } = req.params;
-        console.log(roomId);
+        const { roomId, roomCode } = req.params;
+        console.log(roomId,roomCode);
 
         const response = await RoomInfo.findOneAndDelete({ _id: roomId });
         if (!response) {
             return res.status(404).json({ error: "Room not found" });
         }
-
+        const code = await RoomCodeInfo.findOneAndDelete({code: roomCode});
         const updated = await RoomInfo.find();
 
         res.json({ data: updated });
@@ -66,7 +98,6 @@ const deleteRoom = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
 
 const getRoomData = async (req, res) => {
     const { roomId } = req.params;
@@ -357,5 +388,5 @@ const downloadRoomFiles = async (req, res) => {
 
 
 module.exports = { saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, createRoomFile, getRoomFiles, fetchRoomEditor, updateRoomReqst, updateEditorVersion, downloadRoomFiles,
-    acceptRoomReqst, rejectRoomReqst, deleteRoom,
+    acceptRoomReqst, rejectRoomReqst, deleteRoom,createRoomCode
  };
