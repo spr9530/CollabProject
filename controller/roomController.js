@@ -23,6 +23,7 @@ const saveRoomData = async (req, res) => {
     }
 };
 const generateRoomCodeSegment = () => Math.floor(Math.random() * 900 + 100);
+
 const generateRoomCode = () => {
     const segment1 = generateRoomCodeSegment();
     const segment2 = generateRoomCodeSegment();
@@ -35,7 +36,7 @@ const createRoomCode = async (req, res) => {
     try {
         let unique = false;
         let roomCode;
-        
+
         while (!unique) {
             roomCode = generateRoomCode();
             const existingCode = await RoomCodeInfo.findOne({ roomCode });
@@ -43,8 +44,8 @@ const createRoomCode = async (req, res) => {
                 unique = true;
             }
         }
-        
-        const newRoomCode = new RoomCodeInfo({ code:roomCode });
+
+        const newRoomCode = new RoomCodeInfo({ code: roomCode });
         await newRoomCode.save();
 
         res.status(201).json({ roomCode });
@@ -84,13 +85,13 @@ const creatRoom = async (req, res) => {
 const deleteRoom = async (req, res) => {
     try {
         const { roomId, roomCode } = req.params;
-        console.log(roomId,roomCode);
+        console.log(roomId, roomCode);
 
         const response = await RoomInfo.findOneAndDelete({ _id: roomId });
         if (!response) {
             return res.status(404).json({ error: "Room not found" });
         }
-        const code = await RoomCodeInfo.findOneAndDelete({code: roomCode});
+        const code = await RoomCodeInfo.findOneAndDelete({ code: roomCode });
         const updated = await RoomInfo.find();
 
         res.json({ data: updated });
@@ -108,16 +109,13 @@ const getRoomData = async (req, res) => {
 
     try {
         // Find the room by ID
-        const roomInfo = await RoomInfo.findOne({ _id: roomId });
-
+        const roomInfo = await RoomInfo.findOne({ _id: roomId }).populate('roomFiles');
         if (!roomInfo) {
             return res.status(404).json({ error: 'Room not found' });
         }
-
-        // Populate the 'users.userId' and 'reqsts._id' paths
         await RoomInfo.populate(roomInfo, [
             { path: 'users.userId' },
-            { path: 'reqsts.user' }
+            { path: 'reqsts.user' },
         ]);
 
         res.json({ roomInfo });
@@ -148,25 +146,37 @@ const addUserToRoom = async (req, res) => {
 }
 
 const createRoomFile = async (req, res) => {
-
     const { name, type, roomId, path } = req.body;
     const parentId = req.body.parentId || null;
-    try {
-        const newFile = new FileInfo({
-            name,
-            type,
-            parentId,
-            roomId,
-            path,
-        });
 
-        const savedFile = await newFile.save();
-        res.status(201).json(savedFile);
+    try {
+        // Create and save the new file
+        const newFile = new FileInfo({ name, type, parentId, roomId, path });
+        await newFile.save();
+
+        // Update the room with the new file ID
+        const response = await RoomInfo.findOneAndUpdate(
+            { _id: roomId },
+            { $push: { roomFiles: newFile._id } },
+            { new: true }
+        ).populate('roomFiles');
+
+        if (!response) {
+            return res.status(404).json({ error: 'Room not found' });
+        }
+
+        await RoomInfo.populate(response, [
+            { path: 'users.userId' },
+            { path: 'reqsts.user' },
+        ]);
+
+        res.status(200).json(response);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error creating room file:', error);
+        res.status(500).json({ message: 'Server error' });
     }
-}
+};
+
 
 const getRoomFiles = async (req, res) => {
     const { roomId, parentId } = req.params;
@@ -244,14 +254,14 @@ const updateRoomReqst = async (req, res) => {
     }
 };
 
-const acceptRoomReqst = async(req, res) =>{
-    const {userId} = req.body;
-    const {roomId} = req.params;
-    try{
+const acceptRoomReqst = async (req, res) => {
+    const { userId } = req.body;
+    const { roomId } = req.params;
+    try {
 
         const room = await RoomInfo.findOneAndUpdate(
-            { _id: roomId }, 
-            { 
+            { _id: roomId },
+            {
                 $push: { users: { userId: userId } },
                 $pull: { reqsts: { 'user': userId } }
             },
@@ -262,14 +272,14 @@ const acceptRoomReqst = async(req, res) =>{
             return res.status(404).json({ error: 'Room not found' });
         }
 
-        const userUpdate = await UserInfo.findOneAndUpdate({_id: userId}, {$push:{rooms: room}}, {new:true})
+        const userUpdate = await UserInfo.findOneAndUpdate({ _id: userId }, { $push: { rooms: room } }, { new: true })
 
-        if(!userUpdate){
+        if (!userUpdate) {
             return res.status(404).json({ error: 'Internal error' });
         }
         res.json(room);
 
-    }catch (error) {
+    } catch (error) {
         console.error('Error accepting room request:', error);
         res.status(500).json({ error: 'Failed to accept room request' });
     }
@@ -281,9 +291,9 @@ const rejectRoomReqst = async (req, res) => {
 
     try {
         const room = await RoomInfo.findOneAndUpdate(
-            { _id: roomId }, 
-            { $pull: { reqsts: { 'user': userId} } },
-            { new: true } 
+            { _id: roomId },
+            { $pull: { reqsts: { 'user': userId } } },
+            { new: true }
         );
 
         // Handle case if room is not found
@@ -387,6 +397,7 @@ const downloadRoomFiles = async (req, res) => {
 
 
 
-module.exports = { saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, createRoomFile, getRoomFiles, fetchRoomEditor, updateRoomReqst, updateEditorVersion, downloadRoomFiles,
-    acceptRoomReqst, rejectRoomReqst, deleteRoom,createRoomCode
- };
+module.exports = {
+    saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, createRoomFile, getRoomFiles, fetchRoomEditor, updateRoomReqst, updateEditorVersion, downloadRoomFiles,
+    acceptRoomReqst, rejectRoomReqst, deleteRoom, createRoomCode
+};
