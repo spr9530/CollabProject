@@ -177,7 +177,6 @@ const createRoomFile = async (req, res) => {
     }
 };
 
-
 const getRoomFiles = async (req, res) => {
     const { roomId, parentId } = req.params;
     let id = null
@@ -199,6 +198,21 @@ const getRoomFiles = async (req, res) => {
     }
 
 }
+
+const deleteRoomFile = async (req, res, next) => {
+    const { id } = req.params;
+
+    try {
+        const response = await FileInfo.findByIdAndDelete(id);
+        if (!response) {
+            return res.status(404).json({ error: "File not found" });
+        }
+        next();
+
+    } catch (error) {
+        res.status(500).json(error);
+    }
+};
 
 const updateEditors = async (req, res) => {
     const { roomData } = req.body
@@ -399,5 +413,5 @@ const downloadRoomFiles = async (req, res) => {
 
 module.exports = {
     saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, createRoomFile, getRoomFiles, fetchRoomEditor, updateRoomReqst, updateEditorVersion, downloadRoomFiles,
-    acceptRoomReqst, rejectRoomReqst, deleteRoom, createRoomCode
+    acceptRoomReqst, rejectRoomReqst, deleteRoom, createRoomCode, deleteRoomFile
 };
