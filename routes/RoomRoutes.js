@@ -3,7 +3,8 @@ const { saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, crea
     acceptRoomReqst, rejectRoomReqst,
     deleteRoom,
     createRoomCode,
-    deleteRoomFile
+    deleteRoomFile,
+    updateRoomFile
  } = require('../controller/roomController');
 const router = express.Router();
 const validateUserInfo = require('../middelware/validateUser');
@@ -30,6 +31,8 @@ router.post('/:roomId/files', validateUserInfo, roomAuthentication, createRoomFi
 // This route validates user information and room authentication before uploading files to a room
 
 router.delete('/files/:roomId/:id', deleteRoomFile, getRoomData);
+
+router.patch('/files/:roomId/:fileId', updateRoomFile, getRoomData)
 
 // Route to get files from a specific room and parent directory
 router.get('/:roomId/files/:parentId', validateUserInfo, roomAuthentication, getRoomFiles); 

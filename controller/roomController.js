@@ -210,9 +210,32 @@ const deleteRoomFile = async (req, res, next) => {
         next();
 
     } catch (error) {
-        res.status(500).json(error);
+        console.error('Error updating file:', error); // Log error for server-side debugging
+        res.status(500).json({ error: "Internal server error" });
     }
 };
+
+const updateRoomFile = async(req,res,next) => {
+    const {fileId} = req.params;
+    const {data} = req.body;
+    try{
+        const response = await FileInfo.findOneAndUpdate(
+            { _id: fileId },
+            { $set: data },
+            { new: true }
+        );
+
+        // Check if the file was found and updated
+        if (!response) {
+            return res.status(404).json({ error: "File not found" });
+        }
+
+        next();
+    }catch (error) {
+        console.error('Error updating file:', error); // Log error for server-side debugging
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 
 const updateEditors = async (req, res) => {
     const { roomData } = req.body
@@ -413,5 +436,5 @@ const downloadRoomFiles = async (req, res) => {
 
 module.exports = {
     saveRoomData, creatRoom, getRoomData, addUserToRoom, updateEditors, createRoomFile, getRoomFiles, fetchRoomEditor, updateRoomReqst, updateEditorVersion, downloadRoomFiles,
-    acceptRoomReqst, rejectRoomReqst, deleteRoom, createRoomCode, deleteRoomFile
+    acceptRoomReqst, rejectRoomReqst, deleteRoom, createRoomCode, deleteRoomFile, updateRoomFile
 };
