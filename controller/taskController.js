@@ -1,6 +1,6 @@
 const TaskInfo = require("../models/TaskSchema");
 
-const createTask = async (req, res) => {
+const createTask = async (req, res, next) => {
     try {
         const { taskName, taskDescription, taskStep, taskRoom, users, taskDate } = req.body;
         const task = await TaskInfo({
@@ -12,7 +12,7 @@ const createTask = async (req, res) => {
             taskDate,
         })
         await task.save()
-        res.json({ task })
+        next()
     } catch (error) {
         res.status(500).json({ error: 'Failed to create task' });
     }
@@ -50,7 +50,6 @@ const getAllTask = async (req, res) => {
 
 const getOneTask = async (req, res) => {
     const { id1, id2 } = req.params;
-
     try {
 
         const task = await TaskInfo.find({ taskRoom: id1 })
@@ -70,19 +69,18 @@ const getOneTask = async (req, res) => {
     }
 }
 
-const updateTask = async (req, res) => {
-    const { id } = req.params;
+const updateTask = async (req, res, next) => {
+    const { taskId } = req.params;
 
-    const taskStep = req.body;
-
+    const {data} = req.body;
     try {
 
-        const task = await TaskInfo.findOneAndUpdate({ _id: id }, { $set: { taskStep: taskStep } }, { new: true })
+        const task = await TaskInfo.findOneAndUpdate({ _id: taskId }, { $set: data }, { new: true })
 
         if (!task) {
             return res.status(404).json({ error: 'Task not found' });
         }
-        res.json({ userTask: task });
+        next()
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -90,17 +88,18 @@ const updateTask = async (req, res) => {
 
 }
 
-const deleteTask = async (req, res) => {
-    const { id } = req.params;
+const deleteTask = async (req, res, next) => {
+    const { taskId } = req.params;
+    console.log('hello')
 
     try {
-        const task = await TaskInfo.findOneAndDelete({ _id: id });
+        const task = await TaskInfo.findOneAndDelete({ _id: taskId });
 
         if (!task) {
             return res.status(404).json({ error: 'Task not found' });
         }
 
-        res.status(200).json({ task })
+        next();
     } catch (error) {
         res.status(501).json({ error: error.message })
     }
