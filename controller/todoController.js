@@ -2,14 +2,15 @@ const TodoInfo = require("../models/TodoSchema");
 
 // Function to create a new todo
 const createTodo = async (req, res) => {
-    const { taskName, taskDate, taskDescription = "", from = 'Self' } = req.body;
+    const { taskName, taskDate, taskDescription = "", from = 'Self', roomAddress="" } = req.body;
 
     try {
         const newTodo = new TodoInfo({
             name: taskName,
             date: taskDate,
             description: taskDescription,
-            from
+            from,
+            roomAddress
         });
 
         await newTodo.save();
