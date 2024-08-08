@@ -15,6 +15,7 @@ const createTodo = async (req, res) => {
 
         await newTodo.save();
         const newTodos = await TodoInfo.find();
+        console.log(newTodos)
         res.status(200).json(newTodos);
 
     } catch (error) {

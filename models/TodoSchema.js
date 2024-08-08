@@ -17,6 +17,9 @@ const todoSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    roomAddress:{
+        type: String,
+    },
     from: {
         type: String,
     },
